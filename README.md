@@ -71,7 +71,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Acknowledgements
 
-* [Georg Neumann](https://www.linkedin.com/in/georg-neumann) from [KI Marketing Bootcamp](https://www.linkedin.com/company/ki-marketing-bootcamp) for the initial code and concept
+* [Georg Neumann](https://www.linkedin.com/in/georg-neumann) from [KI Marketing Bootcamp](https://marketing-ki.de) for the initial code and concept
 * The [ComfyUI](https://github.com/comfyanonymous/ComfyUI) team and contributors for creating an amazing platform
 * The vibrant [ComfyUI community](https://registry.comfy.org) and all the custom node creators who continue to push the boundaries of what's possible
 * [Claude by Anthropic](https://www.anthropic.com/claude) for assistance in code refactoring, optimization, and documentation
