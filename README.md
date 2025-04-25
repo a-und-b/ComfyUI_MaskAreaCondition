@@ -37,7 +37,7 @@ This node helps **optimize** such workflows by checking the mask size first.
    ```
 2. Clone this repository:
    ```bash
-   git clone https://github.com/yourusername/ComfyUI_MaskAreaCondition.git
+   git clone https://github.com/a-und-b/ComfyUI_MaskAreaCondition.git
    ```
 3. Restart ComfyUI
 
