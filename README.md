@@ -1,7 +1,6 @@
 # ComfyUI Mask Area Condition
 
-A simple custom node for ComfyUI that analyzes the size (area) of a mask relative to the total image area. Its primary purpose is to enable **conditional workflows**, allowing you to run specific processes (like face detailing) only when needed based on the size of the detected object (e.g., a face mask).
-
+A simple custom node for ComfyUI that analyzes the size (area) of a mask relative to the total image area. Its primary purpose is to enable **conditional workflows**, allowing you to run  face detailing only when needed based on the size of the detected face.
 
 ## Why Measure Mask Size?
 
@@ -18,9 +17,8 @@ This node helps **optimize** such workflows by checking the mask size first.
     *   Outputs a boolean (`is_below_threshold`) indicating if the mask percentage is less than the provided threshold.
     *   Outputs the calculated mask size percentage (`mask_area_percent`).
     *   Passes the original mask through (`mask_passthrough`) for easy chaining.
-*   **Helper Nodes for Automated Conditional Workflows:**
-    *   **`Gate Image (Conditional)` / `Gate Mask (Conditional)`:** These nodes take an `IMAGE` or `MASK` input and a boolean `trigger`. If the trigger is `True`, they pass the data through. If `False`, they output a minimal dummy tensor to prevent errors in downstream nodes that require valid input, effectively halting execution on that branch without causing crashes.
-    *   **`Select Data based on Condition`:** Takes two data inputs (`data_if_true`, `data_if_false`) and a boolean `condition`. It outputs either `data_if_true` or `data_if_false` based on the condition, safely handling potential dummy data from an inactive gated branch.
+*   **Helper Node for Conditional Workflows:**
+    *   **`Select Data based on Condition`:** Takes two data inputs (`data_if_true`, `data_if_false`) of any type and a boolean `condition`. It outputs either `data_if_true` or `data_if_false` based on the condition. This is useful for dynamically selecting workflow parameters (like KSampler steps) or routing final data (like images) based on the mask area condition.
 
 ## Installation
 
@@ -49,21 +47,22 @@ This node helps **optimize** such workflows by checking the mask size first.
 
 1.  Add the **`Mask Area Condition`** node to your workflow (Category: `mask/conditional`).
 2.  Connect a `MASK` output from another node to the `mask` input.
-3.  Connect the `IMAGE` you want to process conditionally (e.g., from a VAE Decode) to the relevant conditional branches later in the flow.
-4.  Set the desired `threshold_percent` value (0-100).
-5.  **Implement Conditional Logic:**
-    *   Use the `is_below_threshold` (BOOLEAN) output from `Mask Area Condition` as the condition. You may need a `NOT Boolean` node (from another pack, or built using logic nodes) to get the inverse condition for the alternative path.
-    *   **Gating Branches:** For each branch (e.g., "Process if Small" vs. "Bypass if Large"):
-        *   Use `Gate Image (Conditional)` and `Gate Mask (Conditional)` nodes.
-        *   Connect the `IMAGE` and `MASK` data needed for that branch to the respective gate's data input.
-        *   Connect the appropriate boolean condition (`is_below_threshold` or its inverse) to the `trigger` input of the gates for that branch.
-    *   **Processing:** Connect the outputs of the gates on the "active" branch to your processing nodes (e.g., Inpaint node).
-    *   **Merging Results:** Use the **`Select Data based on Condition`** node.
-        *   Connect the final result from the "Process if Small" branch (e.g., the inpainted image) to `data_if_true`.
-        *   Connect the final result from the "Bypass if Large" branch (e.g., the original image passed through its gate) to `data_if_false`.
-        *   Connect the original `is_below_threshold` output to the `condition` input.
-    *   Connect the `selected_data` output of `Select Data` to the next step (e.g., `Save Image`).
-6.  Optionally, use `mask_area_percent` for display or other logic, and `mask_passthrough` if needed elsewhere.
+3.  Set the desired `threshold_percent` value (0-100).
+4.  **Implement Conditional Logic using `Select Data`:**
+    *   Identify the parameter you want to control based on the mask size (e.g., the `steps` input of a KSampler for inpainting).
+    *   Create two Primitive nodes holding the different values for that parameter (e.g., one Integer node with `28` for full processing, one with `1` for minimal processing/bypass).
+    *   Add the **`Select Data based on Condition`** node.
+    *   Connect the `is_below_threshold` output from `Mask Area Condition` to the `condition` input of `Select Data`.
+    *   Connect the Primitive node for the "condition is true" case (e.g., `28` steps) to the `data_if_true` input.
+    *   Connect the Primitive node for the "condition is false" case (e.g., `1` step) to the `data_if_false` input.
+    *   Connect the `selected_data` output of `Select Data` to the target parameter input (e.g., the KSampler's `steps` input).
+5.  **Handle Output Image Routing (Optional but common):** If your conditional process generates a different *final* image (e.g., an inpainted image vs. the original), you might still need a way to select the correct final image.
+    *   One common approach is to use a second `Select Data based on Condition` node.
+    *   Feed the original image (or bypassed image) into `data_if_false`.
+    *   Feed the processed image (e.g., inpainted image) into `data_if_true`.
+    *   Use the same `is_below_threshold` boolean as the `condition`.
+    *   The `selected_data` output will be the correct image to send to `Save Image`.
+6.  Optionally, use `mask_area_percent` for display or other logic, and `mask_passthrough` for the actual processing step.
 
 ## Example Use Cases
 
@@ -74,66 +73,50 @@ This node helps **optimize** such workflows by checking the mask size first.
 
 ## Workflow Example
 
-Here's a conceptual outline for using the nodes to conditionally apply an inpainting process only when a mask is below a certain size threshold:
+Here's a conceptual outline for using the nodes to conditionally adjust the number of steps for an inpainting KSampler based on mask size:
 
 ```mermaid
 graph TD
-    subgraph Input Data
-        MaskInput[Mask Source]
-        ImageInput[Image Source e.g., VAE Decode]
-    end
-
-    subgraph Condition Logic
-        MAC[Mask Area Condition]
-        NotBool[NOT Boolean]
-        MaskInput -- MASK --> MAC
-        MAC -- is_below_threshold --> NotBool
-    end
-
-    subgraph Branch - Process if SMALL (Condition TRUE)
-        GateImageTrue[Gate Image Conditional]
-        GateMaskTrue[Gate Mask Conditional]
-        Inpaint[Inpaint Node]
-
-        MAC -- is_below_threshold --> GateImageTrue(trigger)
-        ImageInput -- IMAGE --> GateImageTrue(image)
-
-        MAC -- is_below_threshold --> GateMaskTrue(trigger)
-        MAC -- mask_passthrough --> GateMaskTrue(mask)
-
-        GateImageTrue -- IMAGE --> Inpaint
-        GateMaskTrue -- MASK --> Inpaint
-    end
-
-    subgraph Branch - Bypass if LARGE (Condition FALSE)
-        GateImageFalse[Gate Image Conditional]
-        NotBool -- boolean --> GateImageFalse(trigger)
-        ImageInput -- IMAGE --> GateImageFalse(image)
-    end
-
-    subgraph Merge Results
-        Select[Select Data based on Condition]
-        Inpaint -- IMAGE --> Select(data_if_true)
-        GateImageFalse -- IMAGE --> Select(data_if_false)
-        MAC -- is_below_threshold --> Select(condition)
-    end
-
-    subgraph Final Output
-        Save[Save Image]
-        Select -- selected_data --> Save
-    end
-
+    %% Inputs
+    MaskInput[Mask Source]
+    ImageInput[Image Source]
+    FullSteps[Primitive: 28 Steps]
+    MinSteps[Primitive: 1 Step]
+    
+    %% Condition
+    MAC[Mask Area Condition]
+    MaskInput --> MAC
+    
+    %% Step Selection
+    SelectSteps[Select Data]
+    MAC -- is_below_threshold --> SelectSteps
+    FullSteps --> SelectSteps
+    MinSteps --> SelectSteps
+    
+    %% Processing
+    Inpaint[KSampler Inpaint]
+    ImageInput --> Inpaint
+    MAC -- mask_passthrough --> Inpaint
+    SelectSteps -- selected_data --> Inpaint
+    
+    %% Optional Image Selection
+    SelectImage[Select Final Image]
+    Inpaint --> SelectImage
+    ImageInput --> SelectImage
+    MAC -- is_below_threshold --> SelectImage
+    
+    %% Output
+    Save[Save Image]
+    SelectImage --> Save
 ```
 *   **Mask Area Condition:** Determines if the mask is small (`is_below_threshold = True`).
-*   **NOT Boolean:** Inverts the condition for the "large mask" branch.
-*   **Gate Nodes:** Triggered by the condition or its inverse, they pass either the real data (Image/Mask) or dummy data to their respective branches. This prevents errors in the Inpaint node if it receives no input.
-*   **Inpaint Node:** Runs only with valid data if the mask is small. Receives dummy data otherwise.
-*   **Select Data:** Chooses between the output of the Inpaint node (`data_if_true`) and the output of the bypass gate (`data_if_false`) based on the original `is_below_threshold` condition.
-*   **Save Image:** Receives the correctly selected image.
+*   **Primitives:** Hold the desired step counts (e.g., 28 and 1).
+*   **Select Steps (`Select Data`):** Chooses between the full step count (if `is_below_threshold` is true) and the minimum step count (if false).
+*   **Inpaint KSampler:** Receives the dynamically selected step count. If steps=1, it runs very quickly, effectively bypassing the expensive processing.
+*   **(Optional) Select Image (`Select Data`):** If the processing branch modifies the image *differently* than just bypassing (e.g., actual inpainting vs. passing original), this second selector can choose the correct final image for saving based on the condition.
+*   **Save Image:** Receives the final image.
 
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This approach significantly reduces computation time when the condition dictates bypassing the expensive steps, by minimizing the work done by the processing node itself.
 
 ## Acknowledgements
 
@@ -142,6 +125,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 * The vibrant [ComfyUI community](https://registry.comfy.org) and all the custom node creators who continue to push the boundaries of what's possible
 * [Claude by Anthropic](https://www.anthropic.com/claude) for assistance in code refactoring, optimization, and documentation
 
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 

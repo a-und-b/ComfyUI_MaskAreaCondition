@@ -73,62 +73,13 @@ class MaskAreaCondition:
         return (is_below_threshold, mask_area_percent, mask)
 
 
-# ---  Type-Specific Gates returning Dummy Data --- #
+# --- Removed Type-Specific Gates --- #
+# (Helper function create_dummy_tensor removed as it's no longer needed)
+# class GateImageForConditional: ... (Removed)
+# class GateMaskForConditional: ... (Removed)
 
-def create_dummy_tensor(shape, device='cpu'):
-    """Helper to create a small zero tensor."""
-    return torch.zeros(shape, dtype=torch.float32, device=device)
 
-class GateImageForConditional:
-    """
-    Gates an IMAGE based on a trigger. Outputs a dummy image if trigger is False.
-    """
-    @classmethod
-    def INPUT_TYPES(cls):
-        return {
-            "required": {
-                "image": ("IMAGE",),
-                "trigger": ("BOOLEAN", {"forceInput": True})
-            }
-        }
-    RETURN_TYPES = ("IMAGE",)
-    FUNCTION = "gate_image"
-    CATEGORY = "mask/conditional"
-
-    def gate_image(self, image: torch.Tensor, trigger: bool):
-        if trigger:
-            return (image,)
-        else:
-            # Return dummy image (e.g., 1x1 black pixel)
-            device = image.device if hasattr(image, 'device') else 'cpu'
-            dummy = create_dummy_tensor((1, 1, 1, 3), device=device)
-            return (dummy,)
-
-class GateMaskForConditional:
-    """
-    Gates a MASK based on a trigger. Outputs a dummy mask if trigger is False.
-    """
-    @classmethod
-    def INPUT_TYPES(cls):
-        return {
-            "required": {
-                "mask": ("MASK",),
-                "trigger": ("BOOLEAN", {"forceInput": True})
-            }
-        }
-    RETURN_TYPES = ("MASK",)
-    FUNCTION = "gate_mask"
-    CATEGORY = "mask/conditional"
-
-    def gate_mask(self, mask: torch.Tensor, trigger: bool):
-        if trigger:
-            return (mask,)
-        else:
-            # Return dummy mask (e.g., 1x1 zero mask)
-            device = mask.device if hasattr(mask, 'device') else 'cpu'
-            dummy = create_dummy_tensor((1, 1, 1), device=device) # Shape for mask (Batch, H, W)
-            return (dummy,)
-
+# --- Select Data Node (Kept as is) ---
 class SelectData:
     """
     Selects one of two data inputs based on a boolean condition.
@@ -159,19 +110,17 @@ class SelectData:
             return (data_if_false,)
 
 
-# Node registration dictionary
+# --- Updated Mappings ---
+# Node registration dictionary (to be imported by __init__.py)
 NODE_CLASS_MAPPINGS = {
     "MaskAreaCondition": MaskAreaCondition,
-    # "MaskAreaConditionGate": MaskAreaConditionGate, # Removed
-    "GateImageForConditional": GateImageForConditional,
-    "GateMaskForConditional": GateMaskForConditional,
+    # Gate nodes removed
     "SelectData": SelectData
 }
 
-# Human-readable names dictionary
+# Human-readable names dictionary (to be imported by __init__.py)
 NODE_DISPLAY_NAME_MAPPINGS = {
     "MaskAreaCondition": "Mask Area Condition",
-    "GateImageForConditional": "Gate Image (Conditional)",
-    "GateMaskForConditional": "Gate Mask (Conditional)",
+    # Gate nodes removed
     "SelectData": "Select Data based on Condition"
 } 
