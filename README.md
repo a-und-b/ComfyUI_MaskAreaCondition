@@ -13,10 +13,14 @@ This node helps **optimize** such workflows by checking the mask size first.
 
 ## Features
 
-* Calculates the percentage of the mask area compared to the total tensor area
-* Outputs a boolean (`is_below_threshold`) indicating if the mask percentage is less than the provided threshold
-* Outputs the calculated mask size percentage (`mask_area_percent`)
-* Passes the original mask through (`mask_passthrough`) for easy chaining
+*   **`Mask Area Condition` node:**
+    *   Calculates the percentage of the mask area compared to the total tensor area.
+    *   Outputs a boolean (`is_below_threshold`) indicating if the mask percentage is less than the provided threshold.
+    *   Outputs the calculated mask size percentage (`mask_area_percent`).
+    *   Passes the original mask through (`mask_passthrough`) for easy chaining.
+*   **Helper Nodes for Automated Conditional Workflows:**
+    *   **`Gate Image (Conditional)` / `Gate Mask (Conditional)`:** These nodes take an `IMAGE` or `MASK` input and a boolean `trigger`. If the trigger is `True`, they pass the data through. If `False`, they output a minimal dummy tensor to prevent errors in downstream nodes that require valid input, effectively halting execution on that branch without causing crashes.
+    *   **`Select Data based on Condition`:** Takes two data inputs (`data_if_true`, `data_if_false`) and a boolean `condition`. It outputs either `data_if_true` or `data_if_false` based on the condition, safely handling potential dummy data from an inactive gated branch.
 
 ## Installation
 
@@ -43,16 +47,23 @@ This node helps **optimize** such workflows by checking the mask size first.
 
 ## Usage
 
-1. After installation, add the "Mask Area Condition" node to your workflow
-   * Find it under "mask" → "conditional"
-2. Connect a `MASK` output from another node (e.g., SAM detector, mask primitive, etc.) to the `mask` input
-   * Common choices for face detection include nodes using **Ultralytics YOLO models** (often integrated within detailer nodes like [ADetailer](https://github.com/Bing-su/adetailer)) or detector nodes from packs like the [ComfyUI Impact Pack](https://github.com/ltdrdata/ComfyUI-Impact-Pack).
-   * The **Segment Anything Model (SAM)**, loaded via nodes like `SAMLoader` (also in Impact Pack), is another powerful option for generating masks based on detected points or boxes.
-3. Set the desired `threshold_percent` value (0-100). This value defines the cutoff point: if the calculated mask area percentage is *less than* this threshold, the `is_below_threshold` output will be `True`. The ideal value depends heavily on your specific use case (e.g., how small a face needs to be before you want to detail it) and often requires some experimentation.
-4. Use the outputs:
-   * `is_below_threshold` (BOOLEAN): Connect to conditional nodes to control workflow branching
-   * `mask_area_percent` (FLOAT): Use to display the calculated percentage or for further operations
-   * `mask_passthrough` (MASK): The original input mask, passed through for convenience
+1.  Add the **`Mask Area Condition`** node to your workflow (Category: `mask/conditional`).
+2.  Connect a `MASK` output from another node to the `mask` input.
+3.  Connect the `IMAGE` you want to process conditionally (e.g., from a VAE Decode) to the relevant conditional branches later in the flow.
+4.  Set the desired `threshold_percent` value (0-100).
+5.  **Implement Conditional Logic:**
+    *   Use the `is_below_threshold` (BOOLEAN) output from `Mask Area Condition` as the condition. You may need a `NOT Boolean` node (from another pack, or built using logic nodes) to get the inverse condition for the alternative path.
+    *   **Gating Branches:** For each branch (e.g., "Process if Small" vs. "Bypass if Large"):
+        *   Use `Gate Image (Conditional)` and `Gate Mask (Conditional)` nodes.
+        *   Connect the `IMAGE` and `MASK` data needed for that branch to the respective gate's data input.
+        *   Connect the appropriate boolean condition (`is_below_threshold` or its inverse) to the `trigger` input of the gates for that branch.
+    *   **Processing:** Connect the outputs of the gates on the "active" branch to your processing nodes (e.g., Inpaint node).
+    *   **Merging Results:** Use the **`Select Data based on Condition`** node.
+        *   Connect the final result from the "Process if Small" branch (e.g., the inpainted image) to `data_if_true`.
+        *   Connect the final result from the "Bypass if Large" branch (e.g., the original image passed through its gate) to `data_if_false`.
+        *   Connect the original `is_below_threshold` output to the `condition` input.
+    *   Connect the `selected_data` output of `Select Data` to the next step (e.g., `Save Image`).
+6.  Optionally, use `mask_area_percent` for display or other logic, and `mask_passthrough` if needed elsewhere.
 
 ## Example Use Cases
 
@@ -63,7 +74,62 @@ This node helps **optimize** such workflows by checking the mask size first.
 
 ## Workflow Example
 
-*Example workflow screenshot coming soon*
+Here's a conceptual outline for using the nodes to conditionally apply an inpainting process only when a mask is below a certain size threshold:
+
+```mermaid
+graph TD
+    subgraph Input Data
+        MaskInput[Mask Source]
+        ImageInput[Image Source e.g., VAE Decode]
+    end
+
+    subgraph Condition Logic
+        MAC[Mask Area Condition]
+        NotBool[NOT Boolean]
+        MaskInput -- MASK --> MAC
+        MAC -- is_below_threshold --> NotBool
+    end
+
+    subgraph Branch - Process if SMALL (Condition TRUE)
+        GateImageTrue[Gate Image Conditional]
+        GateMaskTrue[Gate Mask Conditional]
+        Inpaint[Inpaint Node]
+
+        MAC -- is_below_threshold --> GateImageTrue(trigger)
+        ImageInput -- IMAGE --> GateImageTrue(image)
+
+        MAC -- is_below_threshold --> GateMaskTrue(trigger)
+        MAC -- mask_passthrough --> GateMaskTrue(mask)
+
+        GateImageTrue -- IMAGE --> Inpaint
+        GateMaskTrue -- MASK --> Inpaint
+    end
+
+    subgraph Branch - Bypass if LARGE (Condition FALSE)
+        GateImageFalse[Gate Image Conditional]
+        NotBool -- boolean --> GateImageFalse(trigger)
+        ImageInput -- IMAGE --> GateImageFalse(image)
+    end
+
+    subgraph Merge Results
+        Select[Select Data based on Condition]
+        Inpaint -- IMAGE --> Select(data_if_true)
+        GateImageFalse -- IMAGE --> Select(data_if_false)
+        MAC -- is_below_threshold --> Select(condition)
+    end
+
+    subgraph Final Output
+        Save[Save Image]
+        Select -- selected_data --> Save
+    end
+
+```
+*   **Mask Area Condition:** Determines if the mask is small (`is_below_threshold = True`).
+*   **NOT Boolean:** Inverts the condition for the "large mask" branch.
+*   **Gate Nodes:** Triggered by the condition or its inverse, they pass either the real data (Image/Mask) or dummy data to their respective branches. This prevents errors in the Inpaint node if it receives no input.
+*   **Inpaint Node:** Runs only with valid data if the mask is small. Receives dummy data otherwise.
+*   **Select Data:** Chooses between the output of the Inpaint node (`data_if_true`) and the output of the bypass gate (`data_if_false`) based on the original `is_below_threshold` condition.
+*   **Save Image:** Receives the correctly selected image.
 
 ## License
 
