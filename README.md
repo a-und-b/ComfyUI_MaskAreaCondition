@@ -43,27 +43,6 @@ This node helps **optimize** such workflows by checking the mask size first.
    ```
 3. Restart ComfyUI
 
-## Usage
-
-1.  Add the **`Mask Area Condition`** node to your workflow (Category: `mask/conditional`).
-2.  Connect a `MASK` output from another node to the `mask` input.
-3.  Set the desired `threshold_percent` value (0-100).
-4.  **Implement Conditional Logic using `Select Data`:**
-    *   Identify the parameter you want to control based on the mask size (e.g., the `steps` input of a KSampler for inpainting).
-    *   Create two Primitive nodes holding the different values for that parameter (e.g., one Integer node with `28` for full processing, one with `1` for minimal processing/bypass).
-    *   Add the **`Select Data based on Condition`** node.
-    *   Connect the `is_below_threshold` output from `Mask Area Condition` to the `condition` input of `Select Data`.
-    *   Connect the Primitive node for the "condition is true" case (e.g., `28` steps) to the `data_if_true` input.
-    *   Connect the Primitive node for the "condition is false" case (e.g., `1` step) to the `data_if_false` input.
-    *   Connect the `selected_data` output of `Select Data` to the target parameter input (e.g., the KSampler's `steps` input).
-5.  **Handle Output Image Routing (Optional but common):** If your conditional process generates a different *final* image (e.g., an inpainted image vs. the original), you might still need a way to select the correct final image.
-    *   One common approach is to use a second `Select Data based on Condition` node.
-    *   Feed the original image (or bypassed image) into `data_if_false`.
-    *   Feed the processed image (e.g., inpainted image) into `data_if_true`.
-    *   Use the same `is_below_threshold` boolean as the `condition`.
-    *   The `selected_data` output will be the correct image to send to `Save Image`.
-6.  Optionally, use `mask_area_percent` for display or other logic, and `mask_passthrough` for the actual processing step.
-
 ## Example Use Cases
 
 * **Optimize Face Detailing**: Automatically skip computationally expensive face detailing (like Face Detailer or After Detailer) if the detected face mask is already large enough (i.e., when `is_below_threshold` is `False`).
