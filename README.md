@@ -71,53 +71,6 @@ This node helps **optimize** such workflows by checking the mask size first.
 * **Workflow Routing**: Direct the workflow down different paths depending on whether a detected object meets a size criterion.
 * **Quality Control**: Filter out or handle masks differently if they are too small or too large for subsequent reliable processing.
 
-## Workflow Example
-
-Here's a conceptual outline for using the nodes to conditionally adjust the number of steps for an inpainting KSampler based on mask size:
-
-```mermaid
-graph TD
-    %% Inputs
-    MaskInput[Mask Source]
-    ImageInput[Image Source]
-    FullSteps[Primitive: 28 Steps]
-    MinSteps[Primitive: 1 Step]
-    
-    %% Condition
-    MAC[Mask Area Condition]
-    MaskInput --> MAC
-    
-    %% Step Selection
-    SelectSteps[Select Data]
-    MAC -- is_below_threshold --> SelectSteps
-    FullSteps --> SelectSteps
-    MinSteps --> SelectSteps
-    
-    %% Processing
-    Inpaint[KSampler Inpaint]
-    ImageInput --> Inpaint
-    MAC -- mask_passthrough --> Inpaint
-    SelectSteps -- selected_data --> Inpaint
-    
-    %% Optional Image Selection
-    SelectImage[Select Final Image]
-    Inpaint --> SelectImage
-    ImageInput --> SelectImage
-    MAC -- is_below_threshold --> SelectImage
-    
-    %% Output
-    Save[Save Image]
-    SelectImage --> Save
-```
-*   **Mask Area Condition:** Determines if the mask is small (`is_below_threshold = True`).
-*   **Primitives:** Hold the desired step counts (e.g., 28 and 1).
-*   **Select Steps (`Select Data`):** Chooses between the full step count (if `is_below_threshold` is true) and the minimum step count (if false).
-*   **Inpaint KSampler:** Receives the dynamically selected step count. If steps=1, it runs very quickly, effectively bypassing the expensive processing.
-*   **(Optional) Select Image (`Select Data`):** If the processing branch modifies the image *differently* than just bypassing (e.g., actual inpainting vs. passing original), this second selector can choose the correct final image for saving based on the condition.
-*   **Save Image:** Receives the final image.
-
-This approach significantly reduces computation time when the condition dictates bypassing the expensive steps, by minimizing the work done by the processing node itself.
-
 ## Acknowledgements
 
 * [Georg Neumann](https://www.linkedin.com/in/georg-neumann) from [KI Marketing Bootcamp](https://marketing-ki.de) for the initial code and concept
