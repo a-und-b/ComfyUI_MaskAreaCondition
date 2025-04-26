@@ -1,0 +1,14 @@
+[project]
+name = "maskareacondition"
+description = "A simple custom node for ComfyUI that analyzes the size (area) of a mask relative to the total image area. Its primary purpose is to enable conditional workflows, allowing you to run specific processes (like face detailing) only when needed based on the size of the detected object (e.g., a face mask)."
+version = "1.0.0"
+license = {file = "LICENSE"}
+
+[project.urls]
+Repository = "https://github.com/a-und-b/ComfyUI_MaskAreaCondition"
+#  Used by Comfy Registry https://comfyregistry.org
+
+[tool.comfy]
+PublisherId = ""
+DisplayName = "ComfyUI_MaskAreaCondition"
+Icon = ""
