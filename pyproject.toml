@@ -1,7 +1,7 @@
 [project]
 name = "ComfyUI_MaskAreaCondition"
 description = "Calculates the percentage of a mask area compared to the total image size and outputs a boolean based on a defined threshold."
-version = "1.1.0"
+version = "1.1.1"
 license = {file = "LICENSE"}
 
 [project.urls]
