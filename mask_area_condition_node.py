@@ -52,11 +52,14 @@ class MaskAreaCondition:
                 - mask_area_percent: The area of the mask as a percentage of the total area.
                 - mask_passthrough: The original mask tensor passed through for convenience.
         """
+        print(f"[MaskAreaCondition] Executing with threshold: {threshold_percent}%")
+
         if mask.numel() == 0:
             # Handle empty mask case
             mask_area_percent = 0.0
             # Empty mask = nothing detected = no need to run inpainting
             is_below_threshold = False
+            print("[MaskAreaCondition] Input mask is empty. Returning False for is_below_threshold.")
         else:
             # Count non-zero pixels (considered part of the mask)
             # sum() works for float masks (e.g., from blurring) as well as binary masks
@@ -67,9 +70,13 @@ class MaskAreaCondition:
 
             # Calculate mask percentage
             mask_area_percent = (mask_pixels / total_pixels) * 100.0
+            
+            print(f"[MaskAreaCondition] Mask Pixels: {mask_pixels}, Total Pixels: {total_pixels}, Calculated Area: {mask_area_percent:.2f}%")
 
             # Check if the mask area is below the threshold
             is_below_threshold = mask_area_percent < threshold_percent
+            
+        print(f"[MaskAreaCondition] Mask area {mask_area_percent:.2f}% is {'SMALL' if is_below_threshold else 'LARGE'} (threshold: {threshold_percent}%)")
 
         # Return results, including the original mask for convenience in workflows
         return (is_below_threshold, mask_area_percent, mask)
@@ -114,6 +121,8 @@ class SelectData:
         Returns:
             The selected data based on the condition
         """
+        print(f"[SelectData] Condition is {condition}. Selecting data_if_{str(condition).lower()}.")
+        
         if condition:
             # If condition is True, select data_if_true
             return (data_if_true,)

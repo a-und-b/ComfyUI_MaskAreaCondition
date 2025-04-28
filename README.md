@@ -82,6 +82,10 @@ A general-purpose node that selects between two inputs based on a boolean condit
 
 ## Changelog
 
+### v1.1.1
+- Added console logging for easier debugging and workflow monitoring
+- Console logs show threshold values, mask area calculations, and decision outcomes
+
 ### v1.1.0
 - Removed Gate nodes (GateImageForConditional and GateMaskForConditional) in favor of using the more versatile SelectData node
 - Changed empty mask behavior to return False for is_below_threshold (skips processing when nothing is detected)
