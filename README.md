@@ -107,6 +107,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## License
 
+## Examples
+
+### Workflow Example
+
+![Workflow Example](https://raw.githubusercontent.com/a-und-b/ComfyUI_MaskAreaCondition/main/example_workflow.png)
+
+
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
