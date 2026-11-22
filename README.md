@@ -47,6 +47,14 @@ This node helps **optimize** such workflows by checking the mask size first.
    ```
 3. Restart ComfyUI
 
+## Example workflow
+
+![Example workflow](example_workflows/mask-area-condition-preview.png)
+
+1. Load [`example_workflows/mask-area-condition-example.json`](example_workflows/mask-area-condition-example.json).
+2. Point **Load Image** at an image that provides a mask (or connect a real mask source).
+3. Adjust `threshold_percent` and wire **Select Data** into your conditional paths.
+
 ## Nodes Included
 
 This package includes two nodes that work together to create conditional workflows:
