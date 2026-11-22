@@ -1,0 +1,407 @@
+{
+  "id": "a7bf2294-af4e-424d-b60b-f612af85a077",
+  "revision": 0,
+  "last_node_id": 7,
+  "last_link_id": 6,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LoadImage",
+      "pos": [
+        0,
+        30
+      ],
+      "size": [
+        300,
+        370
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "COMBO",
+          "widget": {
+            "name": "image"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "choose file to upload",
+          "name": "upload",
+          "type": "IMAGEUPLOAD",
+          "widget": {
+            "name": "upload"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "localized_name": "MASK",
+          "name": "MASK",
+          "type": "MASK",
+          "links": [
+            1
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "example.png",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "example.png",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 2,
+      "type": "MaskAreaCondition",
+      "pos": [
+        400,
+        30
+      ],
+      "size": [
+        400,
+        170
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "mask",
+          "name": "mask",
+          "type": "MASK",
+          "link": 1
+        },
+        {
+          "localized_name": "threshold_percent",
+          "name": "threshold_percent",
+          "type": "FLOAT",
+          "widget": {
+            "name": "threshold_percent"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "is_below_threshold",
+          "name": "is_below_threshold",
+          "type": "BOOLEAN",
+          "links": [
+            2
+          ]
+        },
+        {
+          "localized_name": "mask_area_percent",
+          "name": "mask_area_percent",
+          "type": "FLOAT",
+          "links": [
+            5
+          ]
+        },
+        {
+          "localized_name": "mask_passthrough",
+          "name": "mask_passthrough",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MaskAreaCondition"
+      },
+      "widgets_values": [
+        10
+      ],
+      "widgets_values_named": {
+        "threshold_percent": 10
+      }
+    },
+    {
+      "id": 3,
+      "type": "PrimitiveString",
+      "pos": [
+        400,
+        330
+      ],
+      "size": [
+        400,
+        70
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "value",
+          "name": "value",
+          "type": "STRING",
+          "widget": {
+            "name": "value"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "STRING",
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            3
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PrimitiveString"
+      },
+      "widgets_values": [
+        "small mask: run the detailer"
+      ],
+      "widgets_values_named": {
+        "value": "small mask: run the detailer"
+      }
+    },
+    {
+      "id": 4,
+      "type": "PrimitiveString",
+      "pos": [
+        400,
+        530
+      ],
+      "size": [
+        400,
+        70
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "value",
+          "name": "value",
+          "type": "STRING",
+          "widget": {
+            "name": "value"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "STRING",
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            4
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PrimitiveString"
+      },
+      "widgets_values": [
+        "large mask: skip it"
+      ],
+      "widgets_values_named": {
+        "value": "large mask: skip it"
+      }
+    },
+    {
+      "id": 5,
+      "type": "SelectData",
+      "pos": [
+        900,
+        30
+      ],
+      "size": [
+        300,
+        170
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "data_if_true",
+          "name": "data_if_true",
+          "type": "*",
+          "link": 3
+        },
+        {
+          "localized_name": "data_if_false",
+          "name": "data_if_false",
+          "type": "*",
+          "link": 4
+        },
+        {
+          "localized_name": "condition",
+          "name": "condition",
+          "type": "BOOLEAN",
+          "link": 2
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "selected_data",
+          "name": "selected_data",
+          "type": "*",
+          "links": [
+            6
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SelectData"
+      }
+    },
+    {
+      "id": 6,
+      "type": "PreviewAny",
+      "pos": [
+        900,
+        330
+      ],
+      "size": [
+        300,
+        170
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "source",
+          "name": "source",
+          "type": "*",
+          "link": 5
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "STRING",
+          "name": "STRING",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewAny"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    },
+    {
+      "id": 7,
+      "type": "PreviewAny",
+      "pos": [
+        1300,
+        30
+      ],
+      "size": [
+        300,
+        170
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "source",
+          "name": "source",
+          "type": "*",
+          "link": 6
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "STRING",
+          "name": "STRING",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewAny"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      1,
+      2,
+      0,
+      "MASK"
+    ],
+    [
+      2,
+      2,
+      0,
+      5,
+      2,
+      "BOOLEAN"
+    ],
+    [
+      3,
+      3,
+      0,
+      5,
+      0,
+      "STRING"
+    ],
+    [
+      4,
+      4,
+      0,
+      5,
+      1,
+      "STRING"
+    ],
+    [
+      5,
+      2,
+      1,
+      6,
+      0,
+      "FLOAT"
+    ],
+    [
+      6,
+      5,
+      0,
+      7,
+      0,
+      "*"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 1,
+      "offset": [
+        0,
+        0
+      ]
+    }
+  },
+  "version": 0.4
+}
