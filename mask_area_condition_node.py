@@ -28,7 +28,8 @@ class MaskAreaCondition:
                     "min": 0.0,
                     "max": 100.0,
                     "step": 0.1,
-                    "display": "number"
+                    "display": "number",
+                    "tooltip": "Mask area below this % of the image returns True",
                 }),
             }
         }
@@ -37,6 +38,10 @@ class MaskAreaCondition:
     RETURN_NAMES = ("is_below_threshold", "mask_area_percent", "mask_passthrough")
     FUNCTION = "check_mask_area"
     CATEGORY = "mask/conditional"
+    DESCRIPTION = (
+        "Measures mask coverage as a percentage of the image and reports whether "
+        "it is below a threshold — useful for conditional detailing workflows."
+    )
 
     def check_mask_area(self, mask: torch.Tensor, threshold_percent: float):
         """
@@ -107,7 +112,10 @@ class SelectData:
     RETURN_TYPES = (any_type,) 
     RETURN_NAMES = ("selected_data",)
     FUNCTION = "select_data"
-    CATEGORY = "mask/conditional" 
+    CATEGORY = "mask/conditional"
+    DESCRIPTION = (
+        "Picks one of two inputs of any type based on a boolean condition."
+    )
 
     def select_data(self, data_if_true, data_if_false, condition):
         """
