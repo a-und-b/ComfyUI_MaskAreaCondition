@@ -22,7 +22,7 @@ class MaskAreaCondition:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "mask": ("MASK",),
+                "mask": ("MASK", {"tooltip": "Mask to measure, e.g. a face or person detection"}),
                 "threshold_percent": ("FLOAT", {
                     "default": 10.0,
                     "min": 0.0,
@@ -37,7 +37,8 @@ class MaskAreaCondition:
     RETURN_TYPES = ("BOOLEAN", "FLOAT", "MASK")
     RETURN_NAMES = ("is_below_threshold", "mask_area_percent", "mask_passthrough")
     FUNCTION = "check_mask_area"
-    CATEGORY = "mask/conditional"
+    CATEGORY = "AB/Mask"
+    SEARCH_ALIASES = ["Mask Area Condition", "mask size", "mask coverage", "mask percent"]
     DESCRIPTION = (
         "Measures mask coverage as a percentage of the image and reports whether "
         "it is below a threshold — useful for conditional detailing workflows."
@@ -103,16 +104,17 @@ class SelectData:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "data_if_true": (any_type,),
-                "data_if_false": (any_type,),
-                "condition": ("BOOLEAN", {"forceInput": True}) 
+                "data_if_true": (any_type, {"tooltip": "Passed on when condition is True"}),
+                "data_if_false": (any_type, {"tooltip": "Passed on when condition is False"}),
+                "condition": ("BOOLEAN", {"forceInput": True, "tooltip": "Which input to pass on, e.g. is_below_threshold"}),
             }
         }
 
     RETURN_TYPES = (any_type,) 
     RETURN_NAMES = ("selected_data",)
     FUNCTION = "select_data"
-    CATEGORY = "mask/conditional"
+    CATEGORY = "AB/Utils"
+    SEARCH_ALIASES = ["Select Data based on Condition", "switch", "if else", "boolean switch"]
     DESCRIPTION = (
         "Picks one of two inputs of any type based on a boolean condition."
     )
@@ -146,6 +148,6 @@ NODE_CLASS_MAPPINGS = {
 
 # Human-readable names dictionary
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "MaskAreaCondition": "Mask Area Condition",
-    "SelectData": "Select Data based on Condition"
+    "MaskAreaCondition": "AB Mask Area Condition",
+    "SelectData": "AB Condition Switch"
 } 

@@ -1,7 +1,7 @@
 [project]
 name = "ComfyUI_MaskAreaCondition"
-description = "Calculates the percentage of a mask area compared to the total image size and outputs a boolean based on a defined threshold."
-version = "1.1.2"
+description = "AB Mask Area Condition measures how much of the image a mask covers and outputs a boolean against a threshold, to run face detailers only when needed. Plus AB Condition Switch for any type. No dependencies."
+version = "1.2.0"
 license = {file = "LICENSE"}
 
 [project.urls]
@@ -10,5 +10,5 @@ Repository = "https://github.com/a-und-b/ComfyUI_MaskAreaCondition"
 
 [tool.comfy]
 PublisherId = "a-und-b"
-DisplayName = "ComfyUI_MaskAreaCondition"
+DisplayName = "AB Mask Area Condition"
 Icon = ""

@@ -1,122 +1,131 @@
-# ComfyUI Mask Area Condition
+<div align="center">
 
-A simple custom node for ComfyUI that analyzes the size (area) of a mask relative to the total image area. Its primary purpose is to enable **conditional workflows**, allowing you to run  face detailing only when needed based on the size of the detected face.
+# AB Mask Area Condition: run a detailer only when it helps, for ComfyUI
 
-## Why Measure Mask Size?
+**Measure how much of the image a mask covers, and switch the workflow on that.**
 
-Image generation models often struggle with rendering small details, especially faces. While nodes like [Face Detailer](https://github.com/ltdrdata/ComfyUI-Impact-Pack) (part of the popular Impact Pack) or [ADetailer (After Detailer)](https://github.com/Bing-su/adetailer) can fix this using inpainting, running them unconditionally adds significant processing time, even if the face is already large and well-rendered.
+<br />
 
-While it's possible to achieve similar conditional logic by combining existing nodes (e.g., getting mask properties and using math/comparison nodes), this dedicated `MaskAreaCondition` node provides a streamlined, single-node solution specifically for this common optimization task, keeping your workflow cleaner and easier to manage.
+[![Star this repo](https://img.shields.io/github/stars/a-und-b/ComfyUI_MaskAreaCondition?style=for-the-badge&logo=github&label=Star&color=yellow)](https://github.com/a-und-b/ComfyUI_MaskAreaCondition/stargazers)
+&nbsp;
+[![Comfy Registry installs](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.comfy.org%2Fnodes%2FComfyUI_MaskAreaCondition&query=%24.downloads&label=registry%20installs&style=for-the-badge&color=5b6cff)](https://registry.comfy.org/nodes/ComfyUI_MaskAreaCondition)
+&nbsp;
+[![Comfy Registry version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.comfy.org%2Fnodes%2FComfyUI_MaskAreaCondition&query=%24.latest_version.version&label=version&prefix=v&style=for-the-badge&color=333)](https://registry.comfy.org/nodes/ComfyUI_MaskAreaCondition)
+&nbsp;
+[![License: MIT](https://img.shields.io/badge/license-MIT-2ea44f?style=for-the-badge)](LICENSE)
 
-This node helps **optimize** such workflows by checking the mask size first.
+<br />
 
-## Features
-
-*   **`Mask Area Condition` node:**
-    *   Calculates the percentage of the mask area compared to the total tensor area.
-    *   Outputs a boolean (`is_below_threshold`) indicating if the mask percentage is less than the provided threshold.
-    *   Outputs the calculated mask size percentage (`mask_area_percent`).
-    *   Passes the original mask through (`mask_passthrough`) for easy chaining.
-    *   Special handling for empty masks: automatically returns `False` for `is_below_threshold` to skip processing when nothing is detected.
-
-*   **`Select Data based on Condition`**
-    *   Helper Node for Conditional Workflows.
-    *   Takes two data inputs (`data_if_true`, `data_if_false`) of any type and a boolean `condition`. 
-    *   Outputs either `data_if_true` or `data_if_false` based on the condition. This is useful for dynamically selecting workflow parameters or routing data based on the mask area condition.
-
-## Installation
-
-### Via ComfyUI Manager (Recommended)
-
-1. Ensure you have [ComfyUI Manager](https://github.com/ltdrdata/ComfyUI-Manager) installed
-2. Open ComfyUI and click the "Manager" button
-3. Navigate to "Install Custom Nodes" tab
-4. Search for "Mask Area Condition"
-5. Click "Install"
-6. Restart ComfyUI and reload the browser tab
-
-### Manual Installation
-
-1. Navigate to your ComfyUI `custom_nodes` directory:
-   ```bash
-   cd /path/to/ComfyUI/custom_nodes/
-   ```
-2. Clone this repository:
-   ```bash
-   git clone https://github.com/a-und-b/ComfyUI_MaskAreaCondition.git
-   ```
-3. Restart ComfyUI
-
-## Example workflow
-
-![Example workflow](example_workflows/mask-area-condition-preview.png)
-
-1. Load [`example_workflows/mask-area-condition-example.json`](example_workflows/mask-area-condition-example.json).
-2. Point **Load Image** at an image that provides a mask (or connect a real mask source).
-3. Adjust `threshold_percent` and wire **Select Data** into your conditional paths.
-
-## Nodes Included
-
-This package includes two nodes that work together to create conditional workflows:
-
-### Mask Area Condition
-
-Analyzes a mask to determine its relative size and provides outputs to control conditional logic.
-
-### Select Data
-
-A general-purpose node that selects between two inputs based on a boolean condition. This works with any data type (images, latents, masks, etc.).
-
-## Basic Usage
-
-1. Add the "Mask Area Condition" node to your workflow
-   * Find it under "mask" → "conditional"
-2. Connect a `MASK` output from another node (e.g., SAM detector, mask primitive, etc.) to the `mask` input
-   * Common sources include face/object detection nodes or segmentation models
-3. Set the desired `threshold_percent` value (0-100)
-   * This defines the cutoff: if mask area percentage is *less than* this threshold, `is_below_threshold` will be `True`
-   * Note: For empty masks (nothing detected), `is_below_threshold` will always be `False`
-4. Add the "Select Data based on Condition" node to your workflow
-5. Connect:
-   * `is_below_threshold` from Mask Area Condition to `condition` on Select Data
-   * Two processing paths to `data_if_true` and `data_if_false` on Select Data
-
-## Example Use Cases
-
-* **Optimize Face Detailing**: Automatically skip computationally expensive face detailing (like Face Detailer or After Detailer) if the detected face mask is already large enough.
-* **Conditional Image Processing**: Apply different effects or processing steps based on the size of a masked object.
-* **Workflow Routing**: Direct the workflow down different paths depending on whether a detected object meets a size criterion.
-* **Quality Control**: Filter out or handle masks differently if they are too small or too large for subsequent reliable processing.
-
-## Changelog
-
-### v1.1.1
-- Added console logging for easier debugging and workflow monitoring
-- Console logs show threshold values, mask area calculations, and decision outcomes
-
-### v1.1.0
-- Removed Gate nodes (GateImageForConditional and GateMaskForConditional) in favor of using the more versatile SelectData node
-- Changed empty mask behavior to return False for is_below_threshold (skips processing when nothing is detected)
-- Improved documentation and code comments
-
-### v1.0.0
-- Initial release with MaskAreaCondition and supporting nodes
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgements
-
-* [Georg Neumann](https://www.linkedin.com/in/georg-neumann) from [KI Marketing Bootcamp](https://marketing-ki.de) for the initial code and concept
-* The [ComfyUI](https://github.com/comfyanonymous/ComfyUI) team and contributors for creating an amazing platform
-* The vibrant [ComfyUI community](https://registry.comfy.org) and all the custom node creators who continue to push the boundaries of what's possible
-* [Claude by Anthropic](https://www.anthropic.com/claude) for assistance in code refactoring, optimization, and documentation
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+![AB Mask Area Condition measures a mask, AB Condition Switch picks one of two texts by the result](example_workflows/ab-mask-area-switch-by-mask-size-preview.png)
 
 ---
 
-Created with ❤️ for the ComfyUI community.
+Face detailers fix small faces, and they cost time on every image, also on the ones where the face is already large and fine. AB Mask Area Condition measures the mask first and tells you whether it is below a threshold; AB Condition Switch then routes the workflow by that answer.
+
+[Install](#install) · [Example workflow](#example-workflow) · [Nodes](#nodes) · [Contributing](#contributing)
+
+</div>
+
+---
+
+## Why AB Mask Area Condition
+
+You can build the same check from mask-statistics and math nodes, and the graph grows by four or five nodes for one decision. Here it is one node and a switch. No extra dependencies, no network calls.
+
+## Features
+
+| You want | You use |
+|----------|---------|
+| Run a detailer only on small faces | **AB Mask Area Condition** → `is_below_threshold` → **AB Condition Switch** |
+| The mask size as a number | `mask_area_percent` (0–100) |
+| Skip when nothing was detected | an empty mask always gives `is_below_threshold = False` |
+| Pick one of two values of any type by a boolean | **AB Condition Switch** |
+
+## Install
+
+**ComfyUI Manager:** search for **AB Mask Area Condition**, install, restart ComfyUI.
+
+**comfy-cli:**
+
+```bash
+comfy node install ComfyUI_MaskAreaCondition
+```
+
+**Manually:**
+
+```bash
+cd ComfyUI/custom_nodes/
+git clone https://github.com/a-und-b/ComfyUI_MaskAreaCondition.git
+```
+
+Restart ComfyUI. **AB Mask Area Condition** appears under **AB/Mask**, **AB Condition Switch** under **AB/Utils**; search for `AB Mask` or `switch`.
+
+## Example workflow
+
+[`ab-mask-area-switch-by-mask-size.json`](example_workflows/ab-mask-area-switch-by-mask-size.json): **Load Image** gives a mask, **AB Mask Area Condition** measures it against 10 %, and **AB Condition Switch** picks "small mask: run the detailer" or "large mask: skip it". Drag the file onto the canvas, or open it in ComfyUI under Workflow → Browse Templates, under the pack's name. Point **Load Image** at an image with a mask, or connect a real mask source.
+
+## Nodes
+
+### AB Mask Area Condition
+
+- `mask`: the mask to measure, for example a face or person detection.
+- `threshold_percent`: below this share of the image, `is_below_threshold` is `True`.
+- Outputs `is_below_threshold` (BOOLEAN), `mask_area_percent` (FLOAT) and `mask_passthrough`, the input mask for chaining.
+
+### AB Condition Switch
+
+- `data_if_true`, `data_if_false`: two inputs of any type (images, latents, masks, text …).
+- `condition`: the boolean that picks one, for example `is_below_threshold`.
+- Output `selected_data`.
+
+Both nodes were called *Mask Area Condition* and *Select Data based on Condition* before 1.2.0; search still finds the old names, and saved workflows load unchanged.
+
+## Use cases
+
+- **Faster face detailing:** skip Face Detailer or ADetailer when the face mask is already large.
+- **Different processing by object size:** apply other steps to small and large masked objects.
+- **Routing:** send the workflow down one of two paths by a size rule.
+- **Quality control:** treat masks that are too small or too large for the next step differently.
+
+## Changelog
+
+### v1.2.0
+- New names and categories: **AB Mask Area Condition** (AB/Mask) and **AB Condition Switch** (AB/Utils); old names stay searchable
+- Tooltips on every input; example workflow in ComfyUI's Templates dialog with a thumbnail
+
+### v1.1.2
+- Example workflow with preview image; node descriptions and a threshold tooltip
+
+### v1.1.1
+- Console logging of threshold, mask area and decision
+
+### v1.1.0
+- Removed the Gate nodes in favour of Select Data (now AB Condition Switch)
+- An empty mask returns `False` for `is_below_threshold`
+
+### v1.0.0
+- Initial release
+
+## Contributing
+
+Bug reports and pull requests are welcome. Open an [issue](https://github.com/a-und-b/ComfyUI_MaskAreaCondition/issues) first for larger changes; [`CONTRIBUTING.md`](CONTRIBUTING.md) has the three steps.
+
+## License
+
+[MIT](LICENSE)
+
+## Credits
+
+- [Georg Neumann](https://www.linkedin.com/in/georg-neumann) from [KI Marketing Bootcamp](https://marketing-ki.de) for the initial code and concept
+
+---
+
+<div align="center">
+
+Built by [Holger Will](https://github.com/a-und-b) at [anders & besser](https://andersundbesser.de)
+
+<br />
+
+[![Star this repo](https://img.shields.io/github/stars/a-und-b/ComfyUI_MaskAreaCondition?style=for-the-badge&logo=github&label=Star&color=yellow)](https://github.com/a-und-b/ComfyUI_MaskAreaCondition/stargazers)
+
+</div>
